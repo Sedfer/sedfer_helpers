@@ -40,7 +40,7 @@ concept implicit_cast_to_buffer = (not is_buffer_v<T>) &&
 
 /// \brief Concept checks if a type can be interpreted from unaligned bytes without causing UB.
 template<typename T>
-concept interpret_from_bytes = (alignof(T) == 1);
+concept interpretable_from_unaligned = (alignof(T) == 1);
 
 /**
  * \brief ConstBuffer is a light-weight, non-owning view of immutable bytes, similar to span\<u8, dynamic_extent\>.
@@ -150,6 +150,7 @@ struct ConstBuffer {
     [[gnu::always_inline]] inline ConstBuffer(const ConstBuffer &) = default;
     [[gnu::always_inline]] inline ConstBuffer(ConstBuffer &&) = default;
     [[gnu::always_inline]] inline ConstBuffer & operator=(const ConstBuffer &) = default;
+    [[gnu::always_inline]] inline ConstBuffer & operator=(ConstBuffer &&) = default;
 
     [[gnu::always_inline]] inline ConstBuffer(const u8 * _data, usize _size)
         : data(_data),
@@ -183,7 +184,7 @@ struct ConstBuffer {
         return {data + size - _size, _size};
     }
 
-    template<interpret_from_bytes T>
+    template<interpretable_from_unaligned T>
     [[nodiscard, gnu::always_inline]] inline const T * peek_interpret() const {
         if(size < sizeof(T)) {
             return nullptr;
@@ -191,7 +192,7 @@ struct ConstBuffer {
         return reinterpret_cast<const T *>(data);
     }
 
-    template<interpret_from_bytes T>
+    template<interpretable_from_unaligned T>
     [[nodiscard, gnu::always_inline]] inline const T * peek_interpret_back() const {
         if(size < sizeof(T)) {
             return nullptr;
@@ -235,14 +236,14 @@ struct ConstBuffer {
         return ret;
     }
 
-    template<interpret_from_bytes T>
+    template<interpretable_from_unaligned T>
     [[nodiscard, gnu::always_inline]] inline const T * interpret() {
         const T * const ret = peek_interpret<T>();
         (void)skip(sizeof(T));
         return ret;
     }
 
-    template<interpret_from_bytes T>
+    template<interpretable_from_unaligned T>
     [[nodiscard, gnu::always_inline]] inline const T * interpret_back() {
         const T * const ret = peek_interpret_back<T>();
         (void)skip_back(sizeof(T));
@@ -260,10 +261,12 @@ struct MutableBuffer {
     // constructors
 
     [[gnu::always_inline]] inline MutableBuffer() = default;
-    [[gnu::always_inline]] inline MutableBuffer(MutableBuffer &) = default;
     [[gnu::always_inline]] inline MutableBuffer(const MutableBuffer &) = default;
+    [[gnu::always_inline]] inline MutableBuffer(MutableBuffer &) = default;
     [[gnu::always_inline]] inline MutableBuffer(MutableBuffer &&) = default;
     [[gnu::always_inline]] inline MutableBuffer & operator=(const MutableBuffer &) = default;
+    [[gnu::always_inline]] inline MutableBuffer & operator=(MutableBuffer &) = default;
+    [[gnu::always_inline]] inline MutableBuffer & operator=(MutableBuffer &&) = default;
 
     [[gnu::always_inline]] inline MutableBuffer(u8 * _data, usize _size)
         : data(_data),
@@ -314,7 +317,7 @@ struct MutableBuffer {
         return {data + size - _size, _size};
     }
 
-    template<interpret_from_bytes T>
+    template<interpretable_from_unaligned T>
     [[nodiscard, gnu::always_inline]] inline T * peek_interpret() {
         if(size < sizeof(T)) {
             return nullptr;
@@ -322,7 +325,7 @@ struct MutableBuffer {
         return reinterpret_cast<T *>(data);
     }
 
-    template<interpret_from_bytes T>
+    template<interpretable_from_unaligned T>
     [[nodiscard, gnu::always_inline]] inline T * peek_interpret_back() {
         if(size < sizeof(T)) {
             return nullptr;
@@ -377,14 +380,14 @@ struct MutableBuffer {
         return ret;
     }
 
-    template<interpret_from_bytes T>
+    template<interpretable_from_unaligned T>
     [[nodiscard, gnu::always_inline]] inline T * interpret() {
         T * const ret = peek_interpret<T>();
         (void)skip(sizeof(T));
         return ret;
     }
 
-    template<interpret_from_bytes T>
+    template<interpretable_from_unaligned T>
     [[nodiscard, gnu::always_inline]] inline T * interpret_back() {
         T * const ret = peek_interpret_back<T>();
         (void)skip_back(sizeof(T));

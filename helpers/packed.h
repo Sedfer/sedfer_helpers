@@ -21,6 +21,7 @@ struct packed {
     [[gnu::always_inline]] inline packed(const packed &) = default;
     [[gnu::always_inline]] inline packed(packed &&) = default;
     [[gnu::always_inline]] inline packed & operator=(const packed &) = default;
+    [[gnu::always_inline]] inline packed & operator=(packed &&) = default;
 
     // NOLINTNEXTLINE(google-explicit-constructor)
     [[gnu::always_inline]] inline constexpr packed(const T & _value)
@@ -34,7 +35,7 @@ struct packed {
     }
 
     // NOLINTNEXTLINE(google-explicit-constructor)
-    [[gnu::always_inline]] inline constexpr operator T() {
+    [[gnu::always_inline]] inline constexpr operator T() const {
         return value;
     }
 } __attribute__((packed));
