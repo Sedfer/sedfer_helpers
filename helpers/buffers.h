@@ -20,9 +20,23 @@ struct is_buffer<MutableBuffer> : std::true_type {};
 template<typename T>
 static constexpr bool is_buffer_v = is_buffer<T>::value;
 
-/// \brief Concept checks if a type should be implicitly cast to ConstBuffer or MutableBuffer.
+/**
+ * \brief Concept checks if a type should be implicitly cast to ConstBuffer or MutableBuffer.
+ *
+ * 1. not is_buffer:
+ *     Disable casting ConstBuffer to MutableBuffer.
+ * 2. is_trivially_copyable (default copy, move, assign and destructor):
+ *     Non-default copy/move/destructor usually means non-POD type, possibly with pointers.
+ * 3. is_standard_layout (no virtual functions, no inheritance, all-public or all-private members):
+ *     None of these should be interpreted as byte arrays.
+ *
+ * \note This is not 100% bulletproof, but should prevent many potential bugs.
+ * \note Some false-positives are possible. Use SEDFER_CONST_BUFFER() and SEDFER_MUTABLE_BUFFER() helpers (or fix layout).
+ */
 template<typename T>
-concept implicit_cast_to_buffer = (not is_buffer_v<T>) && std::is_trivial_v<T> && std::is_standard_layout_v<T>;
+concept implicit_cast_to_buffer = (not is_buffer_v<T>) &&
+                                  std::is_trivially_copyable_v<T> &&
+                                  std::is_standard_layout_v<T>;
 
 /// \brief Concept checks if a type can be interpreted from unaligned bytes without causing UB.
 template<typename T>
@@ -454,3 +468,4 @@ struct MutableBuffer {
  * \endcode
  */
 #define SEDFER_MUTABLE_BUFFER(x) sedfer::MutableBuffer{reinterpret_cast<sedfer::u8 *>(&(x)), sedfer::usize(sizeof(x))}
+#define SEDFER_CONST_BUFFER(x) sedfer::ConstBuffer{reinterpret_cast<const sedfer::u8 *>(&(x)), sedfer::usize(sizeof(x))}

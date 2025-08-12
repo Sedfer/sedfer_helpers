@@ -17,6 +17,11 @@ template<packable T>
 struct packed {
     T value;
 
+    [[gnu::always_inline]] inline packed() = default;
+    [[gnu::always_inline]] inline packed(const packed &) = default;
+    [[gnu::always_inline]] inline packed(packed &&) = default;
+    [[gnu::always_inline]] inline packed & operator=(const packed &) = default;
+
     // NOLINTNEXTLINE(google-explicit-constructor)
     [[gnu::always_inline]] inline constexpr packed(const T & _value)
         : value(_value)

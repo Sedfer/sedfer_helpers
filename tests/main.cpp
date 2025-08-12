@@ -27,6 +27,8 @@ static void test_all() {
 }
 
 int main() {
+    srand(time(nullptr));
+
     sedfer::test::test_all();
 
     return 0;
