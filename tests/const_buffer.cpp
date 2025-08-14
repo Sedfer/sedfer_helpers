@@ -301,6 +301,10 @@ static void static_is_convertable() {
     static_assert(not is_convertable<ConstBuffer, std::deque<i32>>);
     static_assert(not is_convertable<ConstBuffer, std::expected<i32, u32>>);
     static_assert(not is_convertable<ConstBuffer, std::any>);
+
+    // from buffers
+    static_assert(is_convertable<ConstBuffer, ConstBuffer>);
+    static_assert(is_convertable<ConstBuffer, MutableBuffer>);
 }
 
 static void implicit_cast_from_basic_types() {
@@ -729,6 +733,25 @@ static void implicit_cast_from_unpacked_struct_array() {
     };
     S5 s5[17];
     expect_same(s5, s5);
+}
+
+static void implicit_cast_from_mutable_buffer() {
+    u8 bytes[] = {1, 2, 3, 4};
+    MutableBuffer mutable_buffer(bytes);
+    EXPECT(mutable_buffer.data == bytes, "");
+    EXPECT(mutable_buffer.size == sizeof(bytes), "size " << mutable_buffer.size);
+
+    ConstBuffer copy_constructor(mutable_buffer);
+    EXPECT(copy_constructor.data == mutable_buffer.data, "");
+    EXPECT(copy_constructor.size == mutable_buffer.size, "size " << copy_constructor.size);
+
+    ConstBuffer move_constructor(std::move(mutable_buffer));
+    EXPECT(move_constructor.data == mutable_buffer.data, "");
+    EXPECT(move_constructor.size == mutable_buffer.size, "size " << move_constructor.size);
+
+    ConstBuffer assign = mutable_buffer;
+    EXPECT(assign.data == mutable_buffer.data, "");
+    EXPECT(assign.size == mutable_buffer.size, "size " << assign.size);
 }
 
 static void macro_cast_from_basic_types() {
@@ -1659,6 +1682,7 @@ void test_const_buffer() {
     implicit_cast_from_union();
     implicit_cast_from_packed_struct_array();
     implicit_cast_from_unpacked_struct_array();
+    implicit_cast_from_mutable_buffer();
 
     macro_cast_from_basic_types();
     macro_cast_from_packed_types();

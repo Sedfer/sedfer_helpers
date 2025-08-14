@@ -301,6 +301,10 @@ static void static_is_convertable() {
     static_assert(not is_convertable<MutableBuffer, std::deque<i32>>);
     static_assert(not is_convertable<MutableBuffer, std::expected<i32, u32>>);
     static_assert(not is_convertable<MutableBuffer, std::any>);
+
+    // from buffers
+    static_assert(is_convertable<MutableBuffer, MutableBuffer>);
+    static_assert(not is_convertable<MutableBuffer, ConstBuffer>);
 }
 
 static void implicit_cast_from_basic_types() {
