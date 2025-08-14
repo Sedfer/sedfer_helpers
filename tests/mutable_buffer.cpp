@@ -8,7 +8,7 @@
 namespace sedfer::test {
 
 template<typename T>
-static void expect_same(const T & t, ConstBuffer buffer) {
+static void expect_same(const T & t, MutableBuffer buffer) {
     EXPECT(buffer.size == sizeof(T), "size " << buffer.size);
     const u8 * ptr = reinterpret_cast<const u8 *>(&t);
     EXPECT(std::equal(buffer.data, buffer.data + buffer.size, ptr), "");
@@ -22,12 +22,12 @@ static void fill_random(T * data, usize size) {
 }
 
 static void constructor_from_parts() {
-    ConstBuffer random((const u8 *)0x12345678, 0x9abcdef0);
-    EXPECT(random.data == (const u8 *)0x12345678, "");
+    MutableBuffer random((u8 *)0x12345678, 0x9abcdef0);
+    EXPECT(random.data == (u8 *)0x12345678, "");
     EXPECT(random.size == 0x9abcdef0, "");
 
     u8 bytes[6] = { 0x01, 0x02, 0x03, 0x04, 0x05, 0x06};
-    ConstBuffer from_bytes(bytes, 6);
+    MutableBuffer from_bytes(bytes, 6);
     EXPECT(from_bytes.data == bytes, "");
     EXPECT(from_bytes.size == 6, "");
     EXPECT(from_bytes.data[0] == 0x01, "");
@@ -53,12 +53,12 @@ static void constructor_from_parts() {
 }
 
 static void default_constructor() {
-    ConstBuffer uninitialized;
-    ConstBuffer default_initialized{};
-    ConstBuffer assign_initialized = {};
-    ConstBuffer placement_new {(const u8 *)1, 2};
-    new (&placement_new) ConstBuffer;
-    ConstBuffer * new_allocated = new ConstBuffer;
+    MutableBuffer uninitialized;
+    MutableBuffer default_initialized{};
+    MutableBuffer assign_initialized = {};
+    MutableBuffer placement_new {(u8 *)1, 2};
+    new (&placement_new) MutableBuffer;
+    MutableBuffer * new_allocated = new MutableBuffer;
 
     EXPECT(uninitialized.data == nullptr, "");
     EXPECT(uninitialized.size == 0, "size " << uninitialized.size);
@@ -78,10 +78,10 @@ static void default_constructor() {
 
 static void copy_constructor() {
     u8 bytes[6] = { 0x01, 0x02, 0x03, 0x04, 0x05, 0x06};
-    ConstBuffer buffer(bytes, 6);
+    MutableBuffer buffer(bytes, 6);
 
-    ConstBuffer copy_constructed(buffer);
-    ConstBuffer copy_assigned = buffer;
+    MutableBuffer copy_constructed(buffer);
+    MutableBuffer copy_assigned = buffer;
 
     EXPECT(copy_constructed.data == bytes, "");
     EXPECT(copy_constructed.size == 6, "");
@@ -113,10 +113,10 @@ static void copy_constructor() {
 
 static void move_constructor() {
     u8 bytes[6] = { 0x01, 0x02, 0x03, 0x04, 0x05, 0x06};
-    ConstBuffer buffer(bytes, 6);
+    MutableBuffer buffer(bytes, 6);
 
-    ConstBuffer move_constructed(std::move(buffer));
-    ConstBuffer move_assigned = std::move(buffer);
+    MutableBuffer move_constructed(std::move(buffer));
+    MutableBuffer move_assigned = std::move(buffer);
 
     EXPECT(move_constructed.data == bytes, "");
     EXPECT(move_constructed.size == 6, "");
@@ -148,9 +148,9 @@ static void move_constructor() {
 
 static void operator_assign() {
     u8 bytes[6] = { 0x01, 0x02, 0x03, 0x04, 0x05, 0x06};
-    ConstBuffer buffer(bytes, 6);
+    MutableBuffer buffer(bytes, 6);
 
-    ConstBuffer assigned((const u8 *)0x12345678, 0x9abcdef0);
+    MutableBuffer assigned((u8 *)0x12345678, 0x9abcdef0);
     assigned = buffer;
 
     EXPECT(assigned.data == bytes, "");
@@ -173,39 +173,39 @@ static void operator_assign() {
 
 static void static_is_convertable() {
     // basic types
-    static_assert(is_convertable<ConstBuffer, u8>);
-    static_assert(is_convertable<ConstBuffer, u16>);
-    static_assert(is_convertable<ConstBuffer, u32>);
-    static_assert(is_convertable<ConstBuffer, u64>);
-    static_assert(is_convertable<ConstBuffer, u128>);
-    static_assert(is_convertable<ConstBuffer, usize>);
-    static_assert(is_convertable<ConstBuffer, i8>);
-    static_assert(is_convertable<ConstBuffer, i16>);
-    static_assert(is_convertable<ConstBuffer, i32>);
-    static_assert(is_convertable<ConstBuffer, i64>);
-    static_assert(is_convertable<ConstBuffer, i128>);
-    static_assert(is_convertable<ConstBuffer, isize>);
-    static_assert(is_convertable<ConstBuffer, f16>);
-    static_assert(is_convertable<ConstBuffer, f32>);
-    static_assert(is_convertable<ConstBuffer, f64>);
-    static_assert(is_convertable<ConstBuffer, f128>);
+    static_assert(is_convertable<MutableBuffer, u8>);
+    static_assert(is_convertable<MutableBuffer, u16>);
+    static_assert(is_convertable<MutableBuffer, u32>);
+    static_assert(is_convertable<MutableBuffer, u64>);
+    static_assert(is_convertable<MutableBuffer, u128>);
+    static_assert(is_convertable<MutableBuffer, usize>);
+    static_assert(is_convertable<MutableBuffer, i8>);
+    static_assert(is_convertable<MutableBuffer, i16>);
+    static_assert(is_convertable<MutableBuffer, i32>);
+    static_assert(is_convertable<MutableBuffer, i64>);
+    static_assert(is_convertable<MutableBuffer, i128>);
+    static_assert(is_convertable<MutableBuffer, isize>);
+    static_assert(is_convertable<MutableBuffer, f16>);
+    static_assert(is_convertable<MutableBuffer, f32>);
+    static_assert(is_convertable<MutableBuffer, f64>);
+    static_assert(is_convertable<MutableBuffer, f128>);
 
     // packed types
-    static_assert(is_convertable<ConstBuffer, u16packed>);
-    static_assert(is_convertable<ConstBuffer, u32packed>);
-    static_assert(is_convertable<ConstBuffer, u64packed>);
-    static_assert(is_convertable<ConstBuffer, u128packed>);
-    static_assert(is_convertable<ConstBuffer, i16packed>);
-    static_assert(is_convertable<ConstBuffer, i32packed>);
-    static_assert(is_convertable<ConstBuffer, i64packed>);
-    static_assert(is_convertable<ConstBuffer, i128packed>);
+    static_assert(is_convertable<MutableBuffer, u16packed>);
+    static_assert(is_convertable<MutableBuffer, u32packed>);
+    static_assert(is_convertable<MutableBuffer, u64packed>);
+    static_assert(is_convertable<MutableBuffer, u128packed>);
+    static_assert(is_convertable<MutableBuffer, i16packed>);
+    static_assert(is_convertable<MutableBuffer, i32packed>);
+    static_assert(is_convertable<MutableBuffer, i64packed>);
+    static_assert(is_convertable<MutableBuffer, i128packed>);
 
     // OK
     struct S1 {
         u32 a;
         f64 b;
     };
-    static_assert(is_convertable<ConstBuffer, S1>);
+    static_assert(is_convertable<MutableBuffer, S1>);
 
     // user default constructor OK
     struct S2 {
@@ -214,14 +214,14 @@ static void static_is_convertable() {
 
         S2() : a{}, b{} {}
     };
-    static_assert(is_convertable<ConstBuffer, S2>);
+    static_assert(is_convertable<MutableBuffer, S2>);
 
     // default initializers OK
     struct S3 {
         u32 a = 1;
         f64 b = 2;
     };
-    static_assert(is_convertable<ConstBuffer, S3>);
+    static_assert(is_convertable<MutableBuffer, S3>);
 
     // user copy constructor NOT OK
     struct S4 {
@@ -230,7 +230,7 @@ static void static_is_convertable() {
 
         S4(const S4 &);
     };
-    static_assert(not is_convertable<ConstBuffer, S4>);
+    static_assert(not is_convertable<MutableBuffer, S4>);
 
     // mixed public/private members NOT OK
     struct S5 {
@@ -239,7 +239,7 @@ static void static_is_convertable() {
     private:
         f64 b;
     };
-    static_assert(not is_convertable<ConstBuffer, S5>);
+    static_assert(not is_convertable<MutableBuffer, S5>);
 
     // all private members OK
     struct S6 {
@@ -247,7 +247,7 @@ static void static_is_convertable() {
         u32 a;
         f64 b;
     };
-    static_assert(is_convertable<ConstBuffer, S6>);
+    static_assert(is_convertable<MutableBuffer, S6>);
 
     struct Empty {};
 
@@ -256,14 +256,14 @@ static void static_is_convertable() {
     private:
         u8 c;
     };
-    static_assert(is_convertable<ConstBuffer, S7>);
+    static_assert(is_convertable<MutableBuffer, S7>);
 
     // inheritance
     struct S8 : private S1 {
     private:
         u8 c;
     };
-    static_assert(not is_convertable<ConstBuffer, S8>);
+    static_assert(not is_convertable<MutableBuffer, S8>);
 
     // virtual function
     struct S9 {
@@ -272,35 +272,35 @@ static void static_is_convertable() {
 
         virtual void foo();
     };
-    static_assert(not is_convertable<ConstBuffer, S9>);
+    static_assert(not is_convertable<MutableBuffer, S9>);
 
     // array-like OK
-    static_assert(is_convertable<ConstBuffer, u8[10]>);
-    static_assert(is_convertable<ConstBuffer, std::array<u32, 15>>);
-    static_assert(is_convertable<ConstBuffer, decltype("abc")>);
+    static_assert(is_convertable<MutableBuffer, u8[10]>);
+    static_assert(is_convertable<MutableBuffer, std::array<u32, 15>>);
+    static_assert(is_convertable<MutableBuffer, decltype("abc")>);
 
     // OK? TODO: maybe do not allow
-    static_assert(is_convertable<ConstBuffer, std::optional<i32>>);
-    static_assert(is_convertable<ConstBuffer, std::variant<i32, u32, u64>>);
+    static_assert(is_convertable<MutableBuffer, std::optional<i32>>);
+    static_assert(is_convertable<MutableBuffer, std::variant<i32, u32, u64>>);
 
     // most std containers NOT OK
-    static_assert(not is_convertable<ConstBuffer, std::pair<u8, u8>>);
-    static_assert(not is_convertable<ConstBuffer, std::tuple<u8, u16, u32>>);
-    static_assert(not is_convertable<ConstBuffer, std::string>);
-    static_assert(not is_convertable<ConstBuffer, std::vector<i32>>);
-    static_assert(not is_convertable<ConstBuffer, std::set<i32>>);
-    static_assert(not is_convertable<ConstBuffer, std::unordered_set<i32>>);
-    static_assert(not is_convertable<ConstBuffer, std::multiset<i32>>);
-    static_assert(not is_convertable<ConstBuffer, std::unordered_multiset<i32>>);
-    static_assert(not is_convertable<ConstBuffer, std::map<i32, u32>>);
-    static_assert(not is_convertable<ConstBuffer, std::unordered_map<i32, u32>>);
-    static_assert(not is_convertable<ConstBuffer, std::multimap<i32, u32>>);
-    static_assert(not is_convertable<ConstBuffer, std::unordered_multimap<i32, u32>>);
-    static_assert(not is_convertable<ConstBuffer, std::list<i32>>);
-    static_assert(not is_convertable<ConstBuffer, std::forward_list<i32>>);
-    static_assert(not is_convertable<ConstBuffer, std::deque<i32>>);
-    static_assert(not is_convertable<ConstBuffer, std::expected<i32, u32>>);
-    static_assert(not is_convertable<ConstBuffer, std::any>);
+    static_assert(not is_convertable<MutableBuffer, std::pair<u8, u8>>);
+    static_assert(not is_convertable<MutableBuffer, std::tuple<u8, u16, u32>>);
+    static_assert(not is_convertable<MutableBuffer, std::string>);
+    static_assert(not is_convertable<MutableBuffer, std::vector<i32>>);
+    static_assert(not is_convertable<MutableBuffer, std::set<i32>>);
+    static_assert(not is_convertable<MutableBuffer, std::unordered_set<i32>>);
+    static_assert(not is_convertable<MutableBuffer, std::multiset<i32>>);
+    static_assert(not is_convertable<MutableBuffer, std::unordered_multiset<i32>>);
+    static_assert(not is_convertable<MutableBuffer, std::map<i32, u32>>);
+    static_assert(not is_convertable<MutableBuffer, std::unordered_map<i32, u32>>);
+    static_assert(not is_convertable<MutableBuffer, std::multimap<i32, u32>>);
+    static_assert(not is_convertable<MutableBuffer, std::unordered_multimap<i32, u32>>);
+    static_assert(not is_convertable<MutableBuffer, std::list<i32>>);
+    static_assert(not is_convertable<MutableBuffer, std::forward_list<i32>>);
+    static_assert(not is_convertable<MutableBuffer, std::deque<i32>>);
+    static_assert(not is_convertable<MutableBuffer, std::expected<i32, u32>>);
+    static_assert(not is_convertable<MutableBuffer, std::any>);
 }
 
 static void implicit_cast_from_basic_types() {
@@ -411,19 +411,19 @@ static void implicit_cast_from_enum() {
     expect_same(i128v, i128v);
     expect_same(isizev, isizev);
 
-    static_assert(is_convertable<ConstBuffer, E>);
-    static_assert(is_convertable<ConstBuffer, Eu8>);
-    static_assert(is_convertable<ConstBuffer, Eu16>);
-    static_assert(is_convertable<ConstBuffer, Eu32>);
-    static_assert(is_convertable<ConstBuffer, Eu64>);
-    static_assert(is_convertable<ConstBuffer, Eu128>);
-    static_assert(is_convertable<ConstBuffer, Eusize>);
-    static_assert(is_convertable<ConstBuffer, Ei8>);
-    static_assert(is_convertable<ConstBuffer, Ei16>);
-    static_assert(is_convertable<ConstBuffer, Ei32>);
-    static_assert(is_convertable<ConstBuffer, Ei64>);
-    static_assert(is_convertable<ConstBuffer, Ei128>);
-    static_assert(is_convertable<ConstBuffer, Eisize>);
+    static_assert(is_convertable<MutableBuffer, E>);
+    static_assert(is_convertable<MutableBuffer, Eu8>);
+    static_assert(is_convertable<MutableBuffer, Eu16>);
+    static_assert(is_convertable<MutableBuffer, Eu32>);
+    static_assert(is_convertable<MutableBuffer, Eu64>);
+    static_assert(is_convertable<MutableBuffer, Eu128>);
+    static_assert(is_convertable<MutableBuffer, Eusize>);
+    static_assert(is_convertable<MutableBuffer, Ei8>);
+    static_assert(is_convertable<MutableBuffer, Ei16>);
+    static_assert(is_convertable<MutableBuffer, Ei32>);
+    static_assert(is_convertable<MutableBuffer, Ei64>);
+    static_assert(is_convertable<MutableBuffer, Ei128>);
+    static_assert(is_convertable<MutableBuffer, Eisize>);
 }
 
 static void implicit_cast_from_basic_arrays() {
@@ -751,24 +751,24 @@ static void macro_cast_from_basic_types() {
     f64 f64v = 64.0;
     f128 f128v = 128.0;
 
-    expect_same(u8v, SEDFER_CONST_BUFFER(u8v));
-    expect_same(u16v, SEDFER_CONST_BUFFER(u16v));
-    expect_same(u32v, SEDFER_CONST_BUFFER(u32v));
-    expect_same(u64v, SEDFER_CONST_BUFFER(u64v));
-    expect_same(u128v, SEDFER_CONST_BUFFER(u128v));
-    expect_same(usizev, SEDFER_CONST_BUFFER(usizev));
+    expect_same(u8v, SEDFER_MUTABLE_BUFFER(u8v));
+    expect_same(u16v, SEDFER_MUTABLE_BUFFER(u16v));
+    expect_same(u32v, SEDFER_MUTABLE_BUFFER(u32v));
+    expect_same(u64v, SEDFER_MUTABLE_BUFFER(u64v));
+    expect_same(u128v, SEDFER_MUTABLE_BUFFER(u128v));
+    expect_same(usizev, SEDFER_MUTABLE_BUFFER(usizev));
 
-    expect_same(i8v, SEDFER_CONST_BUFFER(i8v));
-    expect_same(i16v, SEDFER_CONST_BUFFER(i16v));
-    expect_same(i32v, SEDFER_CONST_BUFFER(i32v));
-    expect_same(i64v, SEDFER_CONST_BUFFER(i64v));
-    expect_same(i128v, SEDFER_CONST_BUFFER(i128v));
-    expect_same(isizev, SEDFER_CONST_BUFFER(isizev));
+    expect_same(i8v, SEDFER_MUTABLE_BUFFER(i8v));
+    expect_same(i16v, SEDFER_MUTABLE_BUFFER(i16v));
+    expect_same(i32v, SEDFER_MUTABLE_BUFFER(i32v));
+    expect_same(i64v, SEDFER_MUTABLE_BUFFER(i64v));
+    expect_same(i128v, SEDFER_MUTABLE_BUFFER(i128v));
+    expect_same(isizev, SEDFER_MUTABLE_BUFFER(isizev));
 
-    expect_same(f16v, SEDFER_CONST_BUFFER(f16v));
-    expect_same(f32v, SEDFER_CONST_BUFFER(f32v));
-    expect_same(f64v, SEDFER_CONST_BUFFER(f64v));
-    expect_same(f128v, SEDFER_CONST_BUFFER(f128v));
+    expect_same(f16v, SEDFER_MUTABLE_BUFFER(f16v));
+    expect_same(f32v, SEDFER_MUTABLE_BUFFER(f32v));
+    expect_same(f64v, SEDFER_MUTABLE_BUFFER(f64v));
+    expect_same(f128v, SEDFER_MUTABLE_BUFFER(f128v));
 }
 
 static void macro_cast_from_packed_types() {
@@ -781,15 +781,15 @@ static void macro_cast_from_packed_types() {
     i64packed i64v = -64;
     i128packed i128v = -128;
 
-    expect_same(u16v, SEDFER_CONST_BUFFER(u16v));
-    expect_same(u32v, SEDFER_CONST_BUFFER(u32v));
-    expect_same(u64v, SEDFER_CONST_BUFFER(u64v));
-    expect_same(u128v, SEDFER_CONST_BUFFER(u128v));
+    expect_same(u16v, SEDFER_MUTABLE_BUFFER(u16v));
+    expect_same(u32v, SEDFER_MUTABLE_BUFFER(u32v));
+    expect_same(u64v, SEDFER_MUTABLE_BUFFER(u64v));
+    expect_same(u128v, SEDFER_MUTABLE_BUFFER(u128v));
 
-    expect_same(i16v, SEDFER_CONST_BUFFER(i16v));
-    expect_same(i32v, SEDFER_CONST_BUFFER(i32v));
-    expect_same(i64v, SEDFER_CONST_BUFFER(i64v));
-    expect_same(i128v, SEDFER_CONST_BUFFER(i128v));
+    expect_same(i16v, SEDFER_MUTABLE_BUFFER(i16v));
+    expect_same(i32v, SEDFER_MUTABLE_BUFFER(i32v));
+    expect_same(i64v, SEDFER_MUTABLE_BUFFER(i64v));
+    expect_same(i128v, SEDFER_MUTABLE_BUFFER(i128v));
 }
 
 static void macro_cast_from_enum() {
@@ -823,35 +823,35 @@ static void macro_cast_from_enum() {
     Ei128 i128v = (Ei128)128;
     Eisize isizev = (Eisize)1000;
 
-    expect_same(e, SEDFER_CONST_BUFFER(e));
+    expect_same(e, SEDFER_MUTABLE_BUFFER(e));
 
-    expect_same(u8v, SEDFER_CONST_BUFFER(u8v));
-    expect_same(u16v, SEDFER_CONST_BUFFER(u16v));
-    expect_same(u32v, SEDFER_CONST_BUFFER(u32v));
-    expect_same(u64v, SEDFER_CONST_BUFFER(u64v));
-    expect_same(u128v, SEDFER_CONST_BUFFER(u128v));
-    expect_same(usizev, SEDFER_CONST_BUFFER(usizev));
+    expect_same(u8v, SEDFER_MUTABLE_BUFFER(u8v));
+    expect_same(u16v, SEDFER_MUTABLE_BUFFER(u16v));
+    expect_same(u32v, SEDFER_MUTABLE_BUFFER(u32v));
+    expect_same(u64v, SEDFER_MUTABLE_BUFFER(u64v));
+    expect_same(u128v, SEDFER_MUTABLE_BUFFER(u128v));
+    expect_same(usizev, SEDFER_MUTABLE_BUFFER(usizev));
 
-    expect_same(i8v, SEDFER_CONST_BUFFER(i8v));
-    expect_same(i16v, SEDFER_CONST_BUFFER(i16v));
-    expect_same(i32v, SEDFER_CONST_BUFFER(i32v));
-    expect_same(i64v, SEDFER_CONST_BUFFER(i64v));
-    expect_same(i128v, SEDFER_CONST_BUFFER(i128v));
-    expect_same(isizev, SEDFER_CONST_BUFFER(isizev));
+    expect_same(i8v, SEDFER_MUTABLE_BUFFER(i8v));
+    expect_same(i16v, SEDFER_MUTABLE_BUFFER(i16v));
+    expect_same(i32v, SEDFER_MUTABLE_BUFFER(i32v));
+    expect_same(i64v, SEDFER_MUTABLE_BUFFER(i64v));
+    expect_same(i128v, SEDFER_MUTABLE_BUFFER(i128v));
+    expect_same(isizev, SEDFER_MUTABLE_BUFFER(isizev));
 
-    static_assert(is_convertable<ConstBuffer, E>);
-    static_assert(is_convertable<ConstBuffer, Eu8>);
-    static_assert(is_convertable<ConstBuffer, Eu16>);
-    static_assert(is_convertable<ConstBuffer, Eu32>);
-    static_assert(is_convertable<ConstBuffer, Eu64>);
-    static_assert(is_convertable<ConstBuffer, Eu128>);
-    static_assert(is_convertable<ConstBuffer, Eusize>);
-    static_assert(is_convertable<ConstBuffer, Ei8>);
-    static_assert(is_convertable<ConstBuffer, Ei16>);
-    static_assert(is_convertable<ConstBuffer, Ei32>);
-    static_assert(is_convertable<ConstBuffer, Ei64>);
-    static_assert(is_convertable<ConstBuffer, Ei128>);
-    static_assert(is_convertable<ConstBuffer, Eisize>);
+    static_assert(is_convertable<MutableBuffer, E>);
+    static_assert(is_convertable<MutableBuffer, Eu8>);
+    static_assert(is_convertable<MutableBuffer, Eu16>);
+    static_assert(is_convertable<MutableBuffer, Eu32>);
+    static_assert(is_convertable<MutableBuffer, Eu64>);
+    static_assert(is_convertable<MutableBuffer, Eu128>);
+    static_assert(is_convertable<MutableBuffer, Eusize>);
+    static_assert(is_convertable<MutableBuffer, Ei8>);
+    static_assert(is_convertable<MutableBuffer, Ei16>);
+    static_assert(is_convertable<MutableBuffer, Ei32>);
+    static_assert(is_convertable<MutableBuffer, Ei64>);
+    static_assert(is_convertable<MutableBuffer, Ei128>);
+    static_assert(is_convertable<MutableBuffer, Eisize>);
 }
 
 static void macro_cast_from_basic_arrays() {
@@ -874,24 +874,24 @@ static void macro_cast_from_basic_arrays() {
     f64 f64v[137]; fill_random(f64v, 137);
     f128 f128v[1337]; fill_random(f128v, 1337);
 
-    expect_same(u8v, SEDFER_CONST_BUFFER(u8v));
-    expect_same(u16v, SEDFER_CONST_BUFFER(u16v));
-    expect_same(u32v, SEDFER_CONST_BUFFER(u32v));
-    expect_same(u64v, SEDFER_CONST_BUFFER(u64v));
-    expect_same(u128v, SEDFER_CONST_BUFFER(u128v));
-    expect_same(usizev, SEDFER_CONST_BUFFER(usizev));
+    expect_same(u8v, SEDFER_MUTABLE_BUFFER(u8v));
+    expect_same(u16v, SEDFER_MUTABLE_BUFFER(u16v));
+    expect_same(u32v, SEDFER_MUTABLE_BUFFER(u32v));
+    expect_same(u64v, SEDFER_MUTABLE_BUFFER(u64v));
+    expect_same(u128v, SEDFER_MUTABLE_BUFFER(u128v));
+    expect_same(usizev, SEDFER_MUTABLE_BUFFER(usizev));
 
-    expect_same(i8v, SEDFER_CONST_BUFFER(i8v));
-    expect_same(i16v, SEDFER_CONST_BUFFER(i16v));
-    expect_same(i32v, SEDFER_CONST_BUFFER(i32v));
-    expect_same(i64v, SEDFER_CONST_BUFFER(i64v));
-    expect_same(i128v, SEDFER_CONST_BUFFER(i128v));
-    expect_same(isizev, SEDFER_CONST_BUFFER(isizev));
+    expect_same(i8v, SEDFER_MUTABLE_BUFFER(i8v));
+    expect_same(i16v, SEDFER_MUTABLE_BUFFER(i16v));
+    expect_same(i32v, SEDFER_MUTABLE_BUFFER(i32v));
+    expect_same(i64v, SEDFER_MUTABLE_BUFFER(i64v));
+    expect_same(i128v, SEDFER_MUTABLE_BUFFER(i128v));
+    expect_same(isizev, SEDFER_MUTABLE_BUFFER(isizev));
 
-    expect_same(f16v, SEDFER_CONST_BUFFER(f16v));
-    expect_same(f32v, SEDFER_CONST_BUFFER(f32v));
-    expect_same(f64v, SEDFER_CONST_BUFFER(f64v));
-    expect_same(f128v, SEDFER_CONST_BUFFER(f128v));
+    expect_same(f16v, SEDFER_MUTABLE_BUFFER(f16v));
+    expect_same(f32v, SEDFER_MUTABLE_BUFFER(f32v));
+    expect_same(f64v, SEDFER_MUTABLE_BUFFER(f64v));
+    expect_same(f128v, SEDFER_MUTABLE_BUFFER(f128v));
 }
 
 static void macro_cast_from_packed_struct() {
@@ -900,21 +900,21 @@ static void macro_cast_from_packed_struct() {
         u32 b;
     } __attribute__((packed));
     S1 s1 = {123, 456};
-    expect_same(s1, SEDFER_CONST_BUFFER(s1));
+    expect_same(s1, SEDFER_MUTABLE_BUFFER(s1));
 
     struct S2 {
         u8 a;
         u32 b;
     } __attribute__((packed));
     S2 s2 = {123, 456};
-    expect_same(s2, SEDFER_CONST_BUFFER(s2));
+    expect_same(s2, SEDFER_MUTABLE_BUFFER(s2));
 
     struct S3 {
         f64 a;
         i16 b;
     } __attribute__((packed));
     S3 s3 = {123, -456};
-    expect_same(s3, SEDFER_CONST_BUFFER(s3));
+    expect_same(s3, SEDFER_MUTABLE_BUFFER(s3));
 
     struct S4 {
         u8 a;
@@ -935,7 +935,7 @@ static void macro_cast_from_packed_struct() {
         f128 p;
     } __attribute__((packed));
     S4 s4 = {123, 456, 789, 101112, 131415, 161718, -19, -2021, -232425, -262728, -293031, -323334, 3536.f16, -373839, 404142, -43445};
-    expect_same(s4, SEDFER_CONST_BUFFER(s4));
+    expect_same(s4, SEDFER_MUTABLE_BUFFER(s4));
 
     struct S5 {
         S1 a;
@@ -944,7 +944,7 @@ static void macro_cast_from_packed_struct() {
         S4 d;
     } __attribute__((packed));
     S5 s5 = {s1, s2, s3, s4};
-    expect_same(s5, SEDFER_CONST_BUFFER(s5));
+    expect_same(s5, SEDFER_MUTABLE_BUFFER(s5));
 }
 
 static void macro_cast_from_unpacked_struct() {
@@ -953,21 +953,21 @@ static void macro_cast_from_unpacked_struct() {
         u32 b;
     };
     S1 s1 = {123, 456};
-    expect_same(s1, SEDFER_CONST_BUFFER(s1));
+    expect_same(s1, SEDFER_MUTABLE_BUFFER(s1));
 
     struct S2 {
         u8 a;
         u32 b;
     };
     S2 s2 = {123, 456};
-    expect_same(s2, SEDFER_CONST_BUFFER(s2));
+    expect_same(s2, SEDFER_MUTABLE_BUFFER(s2));
 
     struct S3 {
         f64 a;
         i16 b;
     };
     S3 s3 = {123, -456};
-    expect_same(s3, SEDFER_CONST_BUFFER(s3));
+    expect_same(s3, SEDFER_MUTABLE_BUFFER(s3));
 
     struct S4 {
         u8 a;
@@ -988,7 +988,7 @@ static void macro_cast_from_unpacked_struct() {
         f128 p;
     };
     S4 s4 = {123, 456, 789, 101112, 131415, 161718, -19, -2021, -232425, -262728, -293031, -323334, 3536.f16, -373839, 404142, -43445};
-    expect_same(s4, SEDFER_CONST_BUFFER(s4));
+    expect_same(s4, SEDFER_MUTABLE_BUFFER(s4));
 
     struct S5 {
         S1 a;
@@ -997,7 +997,7 @@ static void macro_cast_from_unpacked_struct() {
         S4 d;
     };
     S5 s5 = {s1, s2, s3, s4};
-    expect_same(s5, SEDFER_CONST_BUFFER(s5));
+    expect_same(s5, SEDFER_MUTABLE_BUFFER(s5));
 }
 
 static void macro_cast_from_union() {
@@ -1006,21 +1006,21 @@ static void macro_cast_from_union() {
         i32 b;
     };
     S1 s1 = {.b = 123};
-    expect_same(s1, SEDFER_CONST_BUFFER(s1));
+    expect_same(s1, SEDFER_MUTABLE_BUFFER(s1));
 
     union S2 {
         u8 a;
         u32 b;
     };
     S2 s2 = {.b = 456};
-    expect_same(s2, SEDFER_CONST_BUFFER(s2));
+    expect_same(s2, SEDFER_MUTABLE_BUFFER(s2));
 
     union S3 {
         f64 a;
         i16 b;
     };
     S3 s3 = {.b = -456};
-    expect_same(s3, SEDFER_CONST_BUFFER(s3));
+    expect_same(s3, SEDFER_MUTABLE_BUFFER(s3));
 
     union S4 {
         u8 a;
@@ -1041,7 +1041,7 @@ static void macro_cast_from_union() {
         f128 p;
     };
     S4 s4 = {.e = 7777};
-    expect_same(s4, SEDFER_CONST_BUFFER(s4));
+    expect_same(s4, SEDFER_MUTABLE_BUFFER(s4));
 
     struct S5 {
         S1 a;
@@ -1050,7 +1050,7 @@ static void macro_cast_from_union() {
         S4 d;
     };
     S5 s5 = {s1, s2, s3, s4};
-    expect_same(s5, SEDFER_CONST_BUFFER(s5));
+    expect_same(s5, SEDFER_MUTABLE_BUFFER(s5));
 }
 
 static void macro_cast_from_packed_struct_array() {
@@ -1059,21 +1059,21 @@ static void macro_cast_from_packed_struct_array() {
         u32 b;
     } __attribute__((packed));
     S1 s1[3] = {123, 456, 789, 101112, 131415, 161718};
-    expect_same(s1, SEDFER_CONST_BUFFER(s1));
+    expect_same(s1, SEDFER_MUTABLE_BUFFER(s1));
 
     struct S2 {
         u8 a;
         u32 b;
     } __attribute__((packed));
     S2 s2[4] = {123, 456, 78, 101112, 131, 161718, 255, 77777};
-    expect_same(s2, SEDFER_CONST_BUFFER(s2));
+    expect_same(s2, SEDFER_MUTABLE_BUFFER(s2));
 
     struct S3 {
         f64 a;
         i16 b;
     } __attribute__((packed));
     S3 s3[5] = {123, -456, 789, 11112, 131415, 16118, 255, 7777, 7777, 255};
-    expect_same(s3, SEDFER_CONST_BUFFER(s3));
+    expect_same(s3, SEDFER_MUTABLE_BUFFER(s3));
 
     struct S4 {
         u8 a;
@@ -1094,7 +1094,7 @@ static void macro_cast_from_packed_struct_array() {
         f128 p;
     } __attribute__((packed));
     S4 s4[11] = {123, 456, 789, 101112, 131415, 161718, -19, -2021, -232425, -262728, -293031, -323334, 3536.f16, -373839, 404142, -43445};
-    expect_same(s4, SEDFER_CONST_BUFFER(s4));
+    expect_same(s4, SEDFER_MUTABLE_BUFFER(s4));
 
     struct S5 {
         S1 a[3];
@@ -1103,7 +1103,7 @@ static void macro_cast_from_packed_struct_array() {
         S4 d[11];
     } __attribute__((packed));
     S5 s5[17];
-    expect_same(s5, SEDFER_CONST_BUFFER(s5));
+    expect_same(s5, SEDFER_MUTABLE_BUFFER(s5));
 }
 
 static void macro_cast_from_unpacked_struct_array() {
@@ -1112,21 +1112,21 @@ static void macro_cast_from_unpacked_struct_array() {
         u32 b;
     };
     S1 s1[3] = {123, 456, 789, 101112, 131415, 161718};
-    expect_same(s1, SEDFER_CONST_BUFFER(s1));
+    expect_same(s1, SEDFER_MUTABLE_BUFFER(s1));
 
     struct S2 {
         u8 a;
         u32 b;
     };
     S2 s2[4] = {123, 456, 78, 101112, 131, 161718, 255, 77777};
-    expect_same(s2, SEDFER_CONST_BUFFER(s2));
+    expect_same(s2, SEDFER_MUTABLE_BUFFER(s2));
 
     struct S3 {
         f64 a;
         i16 b;
     };
     S3 s3[5] = {123, -456, 789, 11112, 131415, 16118, 255, 7777, 7777, 255};
-    expect_same(s3, SEDFER_CONST_BUFFER(s3));
+    expect_same(s3, SEDFER_MUTABLE_BUFFER(s3));
 
     struct S4 {
         u8 a;
@@ -1147,7 +1147,7 @@ static void macro_cast_from_unpacked_struct_array() {
         f128 p;
     };
     S4 s4[11] = {123, 456, 789, 101112, 131415, 161718, -19, -2021, -232425, -262728, -293031, -323334, 3536.f16, -373839, 404142, -43445};
-    expect_same(s4, SEDFER_CONST_BUFFER(s4));
+    expect_same(s4, SEDFER_MUTABLE_BUFFER(s4));
 
     struct S5 {
         S1 a[3];
@@ -1156,12 +1156,12 @@ static void macro_cast_from_unpacked_struct_array() {
         S4 d[11];
     };
     S5 s5[17];
-    expect_same(s5, SEDFER_CONST_BUFFER(s5));
+    expect_same(s5, SEDFER_MUTABLE_BUFFER(s5));
 }
 
 static void peek() {
-    const u8 bytes[] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09};
-    ConstBuffer buffer = bytes;
+    u8 bytes[] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09};
+    MutableBuffer buffer = bytes;
     EXPECT(buffer.data == bytes, "");
     EXPECT(buffer.size == 9, "size " << buffer.size);
 
@@ -1198,8 +1198,8 @@ static void peek() {
 }
 
 static void peek_back() {
-    const u8 bytes[] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09};
-    ConstBuffer buffer = bytes;
+    u8 bytes[] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09};
+    MutableBuffer buffer = bytes;
     EXPECT(buffer.data == bytes, "");
     EXPECT(buffer.size == 9, "size " << buffer.size);
 
@@ -1236,20 +1236,20 @@ static void peek_back() {
 }
 
 static void peek_buffer() {
-    const u8 bytes[] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09};
-    ConstBuffer buffer = bytes;
+    u8 bytes[] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09};
+    MutableBuffer buffer = bytes;
     EXPECT(buffer.data == bytes, "");
     EXPECT(buffer.size == 9, "size " << buffer.size);
 
     for(usize i = 0; i <= 9; ++i) {
-        ConstBuffer head = buffer.peek_buffer(i);
+        MutableBuffer head = buffer.peek_buffer(i);
         EXPECT(head.data == bytes, "");
         EXPECT(head.size == i, "size " << head.size);
         EXPECT(buffer.data == bytes, "");
         EXPECT(buffer.size == 9, "size " << buffer.size);
     }
 
-    ConstBuffer head = buffer.peek_buffer(10);
+    MutableBuffer head = buffer.peek_buffer(10);
     EXPECT(head.data == nullptr, "");
     EXPECT(head.size == 0, "size " << head.size);
     EXPECT(buffer.data == bytes, "");
@@ -1257,20 +1257,20 @@ static void peek_buffer() {
 }
 
 static void peek_buffer_back() {
-    const u8 bytes[] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09};
-    ConstBuffer buffer = bytes;
+    u8 bytes[] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09};
+    MutableBuffer buffer = bytes;
     EXPECT(buffer.data == bytes, "");
     EXPECT(buffer.size == 9, "size " << buffer.size);
 
     for(usize i = 0; i <= 9; ++i) {
-        ConstBuffer tail = buffer.peek_buffer_back(i);
+        MutableBuffer tail = buffer.peek_buffer_back(i);
         EXPECT(tail.data == bytes + 9 - i, "");
         EXPECT(tail.size == i, "size " << tail.size);
         EXPECT(buffer.data == bytes, "");
         EXPECT(buffer.size == 9, "size " << buffer.size);
     }
 
-    ConstBuffer tail = buffer.peek_buffer_back(10);
+    MutableBuffer tail = buffer.peek_buffer_back(10);
     EXPECT(tail.data == nullptr, "");
     EXPECT(tail.size == 0, "size " << tail.size);
     EXPECT(buffer.data == bytes, "");
@@ -1278,10 +1278,10 @@ static void peek_buffer_back() {
 }
 
 static void peek_interpret() {
-    const u8 bytes[] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09};
+    u8 bytes[] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09};
 
     {
-        ConstBuffer buffer = bytes;
+        MutableBuffer buffer = bytes;
         auto * ptr = buffer.peek_interpret<u8>();
         EXPECT(ptr != nullptr, "");
         if(ptr) EXPECT(*ptr == 0x01, "");
@@ -1290,7 +1290,7 @@ static void peek_interpret() {
     }
 
     {
-        ConstBuffer buffer = bytes;
+        MutableBuffer buffer = bytes;
         auto * ptr = buffer.peek_interpret<u16packed>();
         EXPECT(ptr != nullptr, "");
         if(ptr) EXPECT(*ptr == 0x0201, "");
@@ -1299,7 +1299,7 @@ static void peek_interpret() {
     }
 
     {
-        ConstBuffer buffer = bytes;
+        MutableBuffer buffer = bytes;
         auto * ptr = buffer.peek_interpret<u32packed>();
         EXPECT(ptr != nullptr, "");
         if(ptr) EXPECT(*ptr == 0x04030201, "");
@@ -1308,7 +1308,7 @@ static void peek_interpret() {
     }
 
     {
-        ConstBuffer buffer = bytes;
+        MutableBuffer buffer = bytes;
         auto * ptr = buffer.peek_interpret<u64packed>();
         EXPECT(ptr != nullptr, "");
         if(ptr) EXPECT(*ptr == 0x0807060504030201, "");
@@ -1317,7 +1317,7 @@ static void peek_interpret() {
     }
 
     {
-        ConstBuffer buffer = bytes;
+        MutableBuffer buffer = bytes;
         auto * ptr = buffer.peek_interpret<u128packed>();
         EXPECT(ptr == nullptr, "");
         EXPECT(buffer.data == bytes, "");
@@ -1326,10 +1326,10 @@ static void peek_interpret() {
 }
 
 static void peek_interpret_back() {
-    const u8 bytes[] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09};
+    u8 bytes[] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09};
 
     {
-        ConstBuffer buffer = bytes;
+        MutableBuffer buffer = bytes;
         auto * ptr = buffer.peek_interpret_back<u8>();
         EXPECT(ptr != nullptr, "");
         if(ptr) EXPECT(*ptr == 0x09, "");
@@ -1338,7 +1338,7 @@ static void peek_interpret_back() {
     }
 
     {
-        ConstBuffer buffer = bytes;
+        MutableBuffer buffer = bytes;
         auto * ptr = buffer.peek_interpret_back<u16packed>();
         EXPECT(ptr != nullptr, "");
         if(ptr) EXPECT(*ptr == 0x0908, "");
@@ -1347,7 +1347,7 @@ static void peek_interpret_back() {
     }
 
     {
-        ConstBuffer buffer = bytes;
+        MutableBuffer buffer = bytes;
         auto * ptr = buffer.peek_interpret_back<u32packed>();
         EXPECT(ptr != nullptr, "");
         if(ptr) EXPECT(*ptr == 0x09080706, "");
@@ -1356,7 +1356,7 @@ static void peek_interpret_back() {
     }
 
     {
-        ConstBuffer buffer = bytes;
+        MutableBuffer buffer = bytes;
         auto * ptr = buffer.peek_interpret_back<u64packed>();
         EXPECT(ptr != nullptr, "");
         if(ptr) EXPECT(*ptr == 0x0908070605040302, "");
@@ -1365,7 +1365,7 @@ static void peek_interpret_back() {
     }
 
     {
-        ConstBuffer buffer = bytes;
+        MutableBuffer buffer = bytes;
         auto * ptr = buffer.peek_interpret_back<u128packed>();
         EXPECT(ptr == nullptr, "");
         EXPECT(buffer.data == bytes, "");
@@ -1374,8 +1374,8 @@ static void peek_interpret_back() {
 }
 
 static void pop() {
-    const u8 bytes[] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09};
-    
+    u8 bytes[] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09};
+
     u8 u8v = -1;
     u16 u16v = -1;
     u32 u32v = -1;
@@ -1383,7 +1383,7 @@ static void pop() {
     u128 u128v = -1;
 
     {
-        ConstBuffer buffer = bytes;
+        MutableBuffer buffer = bytes;
         EXPECT(buffer.pop(u8v), "");
         EXPECT(buffer.data == bytes + 1, "");
         EXPECT(buffer.size == 8, "size " << buffer.size);
@@ -1391,7 +1391,7 @@ static void pop() {
     }
 
     {
-        ConstBuffer buffer = bytes;
+        MutableBuffer buffer = bytes;
         EXPECT(buffer.pop(u16v), "");
         EXPECT(buffer.data == bytes + 2, "");
         EXPECT(buffer.size == 7, "size " << buffer.size);
@@ -1399,7 +1399,7 @@ static void pop() {
     }
 
     {
-        ConstBuffer buffer = bytes;
+        MutableBuffer buffer = bytes;
         EXPECT(buffer.pop(u32v), "");
         EXPECT(buffer.data == bytes + 4, "");
         EXPECT(buffer.size == 5, "size " << buffer.size);
@@ -1407,7 +1407,7 @@ static void pop() {
     }
 
     {
-        ConstBuffer buffer = bytes;
+        MutableBuffer buffer = bytes;
         EXPECT(buffer.pop(u64v), "");
         EXPECT(buffer.data == bytes + 8, "");
         EXPECT(buffer.size == 1, "size " << buffer.size);
@@ -1415,7 +1415,7 @@ static void pop() {
     }
 
     {
-        ConstBuffer buffer = bytes;
+        MutableBuffer buffer = bytes;
         EXPECT(not buffer.pop(u128v), "");
         EXPECT(buffer.data == bytes, "");
         EXPECT(buffer.size == 9, "size " << buffer.size);
@@ -1424,7 +1424,7 @@ static void pop() {
 }
 
 static void pop_back() {
-    const u8 bytes[] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09};
+    u8 bytes[] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09};
 
     u8 u8v = -1;
     u16 u16v = -1;
@@ -1433,7 +1433,7 @@ static void pop_back() {
     u128 u128v = -1;
 
     {
-        ConstBuffer buffer = bytes;
+        MutableBuffer buffer = bytes;
         EXPECT(buffer.pop_back(u8v), "");
         EXPECT(buffer.data == bytes, "");
         EXPECT(buffer.size == 8, "size " << buffer.size);
@@ -1441,7 +1441,7 @@ static void pop_back() {
     }
 
     {
-        ConstBuffer buffer = bytes;
+        MutableBuffer buffer = bytes;
         EXPECT(buffer.pop_back(u16v), "");
         EXPECT(buffer.data == bytes, "");
         EXPECT(buffer.size == 7, "size " << buffer.size);
@@ -1449,7 +1449,7 @@ static void pop_back() {
     }
 
     {
-        ConstBuffer buffer = bytes;
+        MutableBuffer buffer = bytes;
         EXPECT(buffer.pop_back(u32v), "");
         EXPECT(buffer.data == bytes, "");
         EXPECT(buffer.size == 5, "size " << buffer.size);
@@ -1457,7 +1457,7 @@ static void pop_back() {
     }
 
     {
-        ConstBuffer buffer = bytes;
+        MutableBuffer buffer = bytes;
         EXPECT(buffer.pop_back(u64v), "");
         EXPECT(buffer.data == bytes, "");
         EXPECT(buffer.size == 1, "size " << buffer.size);
@@ -1465,7 +1465,7 @@ static void pop_back() {
     }
 
     {
-        ConstBuffer buffer = bytes;
+        MutableBuffer buffer = bytes;
         EXPECT(not buffer.pop_back(u128v), "");
         EXPECT(buffer.data == bytes, "");
         EXPECT(buffer.size == 9, "size " << buffer.size);
@@ -1474,19 +1474,19 @@ static void pop_back() {
 }
 
 static void pop_buffer() {
-    const u8 bytes[] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09};
+    u8 bytes[] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09};
 
     for(usize i = 0; i <= 9; ++i) {
-        ConstBuffer buffer = bytes;
-        ConstBuffer head = buffer.pop_buffer(i);
+        MutableBuffer buffer = bytes;
+        MutableBuffer head = buffer.pop_buffer(i);
         EXPECT(head.data == bytes, "");
         EXPECT(head.size == i, "size " << head.size);
         EXPECT(buffer.data == bytes + i, "");
         EXPECT(buffer.size == 9 - i, "size " << buffer.size);
     }
 
-    ConstBuffer buffer = bytes;
-    ConstBuffer head = buffer.pop_buffer(10);
+    MutableBuffer buffer = bytes;
+    MutableBuffer head = buffer.pop_buffer(10);
     EXPECT(head.data == nullptr, "");
     EXPECT(head.size == 0, "size " << head.size);
     EXPECT(buffer.data == bytes, "");
@@ -1494,19 +1494,19 @@ static void pop_buffer() {
 }
 
 static void pop_buffer_back() {
-    const u8 bytes[] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09};
+    u8 bytes[] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09};
 
     for(usize i = 0; i <= 9; ++i) {
-        ConstBuffer buffer = bytes;
-        ConstBuffer tail = buffer.pop_buffer_back(i);
+        MutableBuffer buffer = bytes;
+        MutableBuffer tail = buffer.pop_buffer_back(i);
         EXPECT(tail.data == bytes + 9 - i, "");
         EXPECT(tail.size == i, "size " << tail.size);
         EXPECT(buffer.data == bytes, "");
         EXPECT(buffer.size == 9 - i, "size " << buffer.size);
     }
 
-    ConstBuffer buffer = bytes;
-    ConstBuffer tail = buffer.pop_buffer_back(10);
+    MutableBuffer buffer = bytes;
+    MutableBuffer tail = buffer.pop_buffer_back(10);
     EXPECT(tail.data == nullptr, "");
     EXPECT(tail.size == 0, "size " << tail.size);
     EXPECT(buffer.data == bytes, "");
@@ -1514,10 +1514,10 @@ static void pop_buffer_back() {
 }
 
 static void interpret() {
-    const u8 bytes[] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09};
+    u8 bytes[] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09};
 
     {
-        ConstBuffer buffer = bytes;
+        MutableBuffer buffer = bytes;
         auto * ptr = buffer.interpret<u8>();
         EXPECT(ptr != nullptr, "");
         if(ptr) EXPECT(*ptr == 0x01, "");
@@ -1526,7 +1526,7 @@ static void interpret() {
     }
 
     {
-        ConstBuffer buffer = bytes;
+        MutableBuffer buffer = bytes;
         auto * ptr = buffer.interpret<u16packed>();
         EXPECT(ptr != nullptr, "");
         if(ptr) EXPECT(*ptr == 0x0201, "");
@@ -1535,7 +1535,7 @@ static void interpret() {
     }
 
     {
-        ConstBuffer buffer = bytes;
+        MutableBuffer buffer = bytes;
         auto * ptr = buffer.interpret<u32packed>();
         EXPECT(ptr != nullptr, "");
         if(ptr) EXPECT(*ptr == 0x04030201, "");
@@ -1544,7 +1544,7 @@ static void interpret() {
     }
 
     {
-        ConstBuffer buffer = bytes;
+        MutableBuffer buffer = bytes;
         auto * ptr = buffer.interpret<u64packed>();
         EXPECT(ptr != nullptr, "");
         if(ptr) EXPECT(*ptr == 0x0807060504030201, "");
@@ -1553,7 +1553,7 @@ static void interpret() {
     }
 
     {
-        ConstBuffer buffer = bytes;
+        MutableBuffer buffer = bytes;
         auto * ptr = buffer.interpret<u128packed>();
         EXPECT(ptr == nullptr, "");
         EXPECT(buffer.data == bytes, "");
@@ -1561,11 +1561,11 @@ static void interpret() {
     }
 }
 
-void interpret_back() {
-    const u8 bytes[] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09};
+static void interpret_back() {
+    u8 bytes[] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09};
 
     {
-        ConstBuffer buffer = bytes;
+        MutableBuffer buffer = bytes;
         auto * ptr = buffer.interpret_back<u8>();
         EXPECT(ptr != nullptr, "");
         if(ptr) EXPECT(*ptr == 0x09, "");
@@ -1574,7 +1574,7 @@ void interpret_back() {
     }
 
     {
-        ConstBuffer buffer = bytes;
+        MutableBuffer buffer = bytes;
         auto * ptr = buffer.interpret_back<u16packed>();
         EXPECT(ptr != nullptr, "");
         if(ptr) EXPECT(*ptr == 0x0908, "");
@@ -1583,7 +1583,7 @@ void interpret_back() {
     }
 
     {
-        ConstBuffer buffer = bytes;
+        MutableBuffer buffer = bytes;
         auto * ptr = buffer.interpret_back<u32packed>();
         EXPECT(ptr != nullptr, "");
         if(ptr) EXPECT(*ptr == 0x09080706, "");
@@ -1592,7 +1592,7 @@ void interpret_back() {
     }
 
     {
-        ConstBuffer buffer = bytes;
+        MutableBuffer buffer = bytes;
         auto * ptr = buffer.interpret_back<u64packed>();
         EXPECT(ptr != nullptr, "");
         if(ptr) EXPECT(*ptr == 0x0908070605040302, "");
@@ -1601,7 +1601,7 @@ void interpret_back() {
     }
 
     {
-        ConstBuffer buffer = bytes;
+        MutableBuffer buffer = bytes;
         auto * ptr = buffer.interpret_back<u128packed>();
         EXPECT(ptr == nullptr, "");
         EXPECT(buffer.data == bytes, "");
@@ -1610,38 +1610,38 @@ void interpret_back() {
 }
 
 static void skip() {
-    const u8 bytes[] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09};
+    u8 bytes[] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09};
 
     for(usize i = 0; i <= 9; ++i) {
-        ConstBuffer buffer = bytes;
+        MutableBuffer buffer = bytes;
         EXPECT(buffer.skip(i), "");
         EXPECT(buffer.data == bytes + i, "");
         EXPECT(buffer.size == 9 - i, "size " << buffer.size);
     }
 
-    ConstBuffer buffer = bytes;
+    MutableBuffer buffer = bytes;
     EXPECT(not buffer.skip(10), "");
     EXPECT(buffer.data == bytes, "");
     EXPECT(buffer.size == 9, "size " << buffer.size);
 }
 
 static void skip_back() {
-    const u8 bytes[] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09};
+    u8 bytes[] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09};
 
     for(usize i = 0; i <= 9; ++i) {
-        ConstBuffer buffer = bytes;
+        MutableBuffer buffer = bytes;
         EXPECT(buffer.skip_back(i), "");
         EXPECT(buffer.data == bytes, "");
         EXPECT(buffer.size == 9 - i, "size " << buffer.size);
     }
 
-    ConstBuffer buffer = bytes;
+    MutableBuffer buffer = bytes;
     EXPECT(not buffer.skip_back(10), "");
     EXPECT(buffer.data == bytes, "");
     EXPECT(buffer.size == 9, "size " << buffer.size);
 }
 
-void test_const_buffer() {
+void test_mutable_buffer() {
     constructor_from_parts();
     default_constructor();
     copy_constructor();

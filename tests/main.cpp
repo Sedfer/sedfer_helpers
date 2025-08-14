@@ -9,6 +9,7 @@ usize stats::passed = 0;
 usize stats::failed = 0;
 
 void test_const_buffer();
+void test_mutable_buffer();
 
 static void print_result() {
     if(test::stats::failed) {
@@ -20,6 +21,7 @@ static void print_result() {
 
 static void test_all() {
     test_const_buffer();
+    test_mutable_buffer();
 
     print_result();
 }
