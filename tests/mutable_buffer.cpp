@@ -1613,6 +1613,120 @@ static void interpret_back() {
     }
 }
 
+static void push() {
+    {
+        u8 bytes[] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09};
+        const u8 expected[] = {0xAB, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09};
+        u8 u8v = 0xAB;
+        MutableBuffer buffer = bytes;
+        EXPECT(buffer.push(u8v), "");
+        EXPECT(buffer.data == bytes + 1, "");
+        EXPECT(buffer.size == 8, "size " << buffer.size);
+        EXPECT(std::equal(bytes, bytes + sizeof(bytes), expected), "");
+    }
+
+    {
+        u8 bytes[] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09};
+        const u8 expected[] = {0xAB, 0xCD, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09};
+        u16 u16v = 0xCDAB;
+        MutableBuffer buffer = bytes;
+        EXPECT(buffer.push(u16v), "");
+        EXPECT(buffer.data == bytes + 2, "");
+        EXPECT(buffer.size == 7, "size " << buffer.size);
+        EXPECT(std::equal(bytes, bytes + sizeof(bytes), expected), "");
+    }
+
+    {
+        u8 bytes[] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09};
+        const u8 expected[] = {0xAB, 0xCD, 0xEF, 0x12, 0x05, 0x06, 0x07, 0x08, 0x09};
+        u32 u32v = 0x12EFCDAB;
+        MutableBuffer buffer = bytes;
+        EXPECT(buffer.push(u32v), "");
+        EXPECT(buffer.data == bytes + 4, "");
+        EXPECT(buffer.size == 5, "size " << buffer.size);
+        EXPECT(std::equal(bytes, bytes + sizeof(bytes), expected), "");
+    }
+
+    {
+        u8 bytes[] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09};
+        const u8 expected[] = {0xAB, 0xCD, 0xEF, 0x12, 0x34, 0x56, 0x078, 0x90, 0x09};
+        u64 u64v = 0x9078563412EFCDAB;
+        MutableBuffer buffer = bytes;
+        EXPECT(buffer.push(u64v), "");
+        EXPECT(buffer.data == bytes + 8, "");
+        EXPECT(buffer.size == 1, "size " << buffer.size);
+        EXPECT(std::equal(bytes, bytes + sizeof(bytes), expected), "");
+    }
+
+    {
+        u8 bytes[] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09};
+        const u8 expected[] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09};
+        u128 u128v = -1;
+        MutableBuffer buffer = bytes;
+        EXPECT(not buffer.push(u128v), "");
+        EXPECT(buffer.data == bytes, "");
+        EXPECT(buffer.size == 9, "size " << buffer.size);
+        EXPECT(std::equal(bytes, bytes + sizeof(bytes), expected), "");
+    }
+}
+
+static void push_back() {
+    {
+        u8 bytes[] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09};
+        const u8 expected[] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0xAB};
+        u8 u8v = 0xAB;
+        MutableBuffer buffer = bytes;
+        EXPECT(buffer.push_back(u8v), "");
+        EXPECT(buffer.data == bytes, "");
+        EXPECT(buffer.size == 8, "size " << buffer.size);
+        EXPECT(std::equal(bytes, bytes + sizeof(bytes), expected), "");
+    }
+
+    {
+        u8 bytes[] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09};
+        const u8 expected[] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0xAB, 0xCD};
+        u16 u16v = 0xCDAB;
+        MutableBuffer buffer = bytes;
+        EXPECT(buffer.push_back(u16v), "");
+        EXPECT(buffer.data == bytes, "");
+        EXPECT(buffer.size == 7, "size " << buffer.size);
+        EXPECT(std::equal(bytes, bytes + sizeof(bytes), expected), "");
+    }
+
+    {
+        u8 bytes[] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09};
+        const u8 expected[] = {0x01, 0x02, 0x03, 0x04, 0x05, 0xAB, 0xCD, 0xEF, 0x12};
+        u32 u32v = 0x12EFCDAB;
+        MutableBuffer buffer = bytes;
+        EXPECT(buffer.push_back(u32v), "");
+        EXPECT(buffer.data == bytes, "");
+        EXPECT(buffer.size == 5, "size " << buffer.size);
+        EXPECT(std::equal(bytes, bytes + sizeof(bytes), expected), "");
+    }
+
+    {
+        u8 bytes[] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09};
+        const u8 expected[] = {0x01, 0xAB, 0xCD, 0xEF, 0x12, 0x34, 0x56, 0x78, 0x90};
+        u64 u64v = 0x9078563412EFCDAB;
+        MutableBuffer buffer = bytes;
+        EXPECT(buffer.push_back(u64v), "");
+        EXPECT(buffer.data == bytes, "");
+        EXPECT(buffer.size == 1, "size " << buffer.size);
+        EXPECT(std::equal(bytes, bytes + sizeof(bytes), expected), "");
+    }
+
+    {
+        u8 bytes[] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09};
+        const u8 expected[] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09};
+        u128 u128v = -1;
+        MutableBuffer buffer = bytes;
+        EXPECT(not buffer.push_back(u128v), "");
+        EXPECT(buffer.data == bytes, "");
+        EXPECT(buffer.size == 9, "size " << buffer.size);
+        EXPECT(std::equal(bytes, bytes + sizeof(bytes), expected), "");
+    }
+}
+
 static void skip() {
     u8 bytes[] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09};
 
@@ -1687,6 +1801,9 @@ void test_mutable_buffer() {
     pop_buffer_back();
     interpret();
     interpret_back();
+
+    push();
+    push_back();
 
     skip();
     skip_back();
